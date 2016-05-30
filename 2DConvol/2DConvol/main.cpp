@@ -60,6 +60,7 @@ int main()
 //	omp_set_num_threads(4);
 //#pragma omp parallel for
 
+	int fSize = sizeof(float);
 	int yRowSize = X[0].size() - K[0].size() + 1;
 	int yRowHalf = yRowSize >> 1;
 	int yRowQuad = yRowHalf >> 1;
@@ -69,15 +70,15 @@ int main()
 
 
 	//---------------2D Convolution---------------//
-	float* Xvec = new float[X.size() * X.size()];
-	float* Kvec = new float[K.size() * K.size()];
+	float* Xvec = new float[X.size() * X[0].size()];
+	float* Kvec = new float[K.size() * K[0].size()];
 	for (int i = 0; i < X.size(); i++) {
-		for (int j = 0; j < X.size(); j++)
+		for (int j = 0; j < X[0].size(); j++)
 			Xvec[X.size() * i + j] = X[i][j];
 	}
 
 	for (int k = 0; k < K.size(); k++) {
-		for (int l = 0; l < K.size(); l++)
+		for (int l = 0; l < K[0].size(); l++)
 			Kvec[K.size() * k + l] = K[k][l];
 	}
 
@@ -86,90 +87,94 @@ int main()
 	// partition #01 - 2사분면 (0 ~ 1/2, 0 ~ 1/2)
 		for (int c = 0; c < yColHalf; c++) 
 			for (int a = 0; a < yRowHalf; a += yRowQuad) {
-			vector<float> t;
-			float tmp;
-			t.resize(yRowQuad);
-			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++) {
-					tmp = Kvec[K.size() * d + b];
-					for (int i = 0; i < t.size(); i++)
-						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
-				}
-			for (int i = 0; i < t.size(); i++)
-				Y[c][a + i] = t[i];
-		}
+				float* t = (float*) malloc(yRowQuad * fSize);
+				float tmp;
+				for (int b = 0; b < K[0].size(); b++)
+					for (int d = 0; d < K.size(); d++) {
+						tmp = Kvec[K.size() * d + b];
+						for (int i = 0; i < yRowQuad; i++)
+							t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+					}
+				for (int i = 0; i < yRowQuad; i++)
+					Y[c][a + i] = t[i];
+				free(t);
+			}
 
 	//partition #02 - 1사분면 (1/2 ~ 1, 0 ~ 1/2)
 		for (int c = 0; c < yColHalf; c++) 
 			for (int a = yRowHalf; a < yRowSize - 1; a += yRowQuad) {
-			vector<float> t;
-			float tmp;
-			t.resize(yRowQuad);
-			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++) {
-					tmp = Kvec[K.size() * d + b];
-					for (int i = 0; i < t.size(); i++)
-						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
-				}
-			for (int i = 0; i < t.size(); i++)
-				Y[c][a + i] = t[i];
-		}
+				float* t = (float*) malloc(yRowQuad * fSize);
+				float tmp;
+				for (int b = 0; b < K[0].size(); b++)
+					for (int d = 0; d < K.size(); d++) {
+						tmp = Kvec[K.size() * d + b];
+						for (int i = 0; i < yRowQuad; i++)
+							t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+					}
+				for (int i = 0; i < yRowQuad; i++)
+					Y[c][a + i] = t[i];
+				free(t);
+			}
 
 	//partition #03 - 3사분면 (0 ~ 1/2, 1/2 ~ 1)
 		for (int c = yColHalf; c < yColSize - 1; c++)
 			for (int a = 0; a < yRowHalf; a += yRowQuad) {
-			vector<float> t;
-			float tmp;
-			t.resize(yRowQuad);
-			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++) {
-					tmp = Kvec[K.size() * d + b];
-					for (int i = 0; i < t.size(); i++)
-						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
-				}
-			for (int i = 0; i < t.size(); i++)
-				Y[c][a + i] = t[i];
-		}
+				float* t = (float*) malloc(yRowQuad * fSize);
+				float tmp;
+				for (int b = 0; b < K[0].size(); b++)
+					for (int d = 0; d < K.size(); d++) {
+						tmp = Kvec[K.size() * d + b];
+						for (int i = 0; i < yRowQuad; i++)
+							t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+					}
+				for (int i = 0; i < yRowQuad; i++)
+					Y[c][a + i] = t[i];
+				free(t);
+			}
 
 	//partition #04 - 4사분면 (1/2 ~ 1, 1/2 ~ 1)
 		for (int c = yColHalf; c < yColSize - 1; c++)
 			for (int a = yRowHalf; a < yRowSize - 1; a+= yRowQuad) {
-			vector<float> t;
-			float tmp;
-			t.resize(yRowQuad);
-			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++) {
-					tmp = Kvec[K.size() * d + b];
-					for (int i = 0; i < t.size(); i++)
-						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
-				}
-			for (int i = 0; i < t.size(); i++)
-				Y[c][a + i] = t[i];
-		}
+				float* t = (float*) malloc(yRowQuad * fSize);
+				float tmp;
+				for (int b = 0; b < K[0].size(); b++)
+					for (int d = 0; d < K.size(); d++) {
+						tmp = Kvec[K.size() * d + b];
+						for (int i = 0; i < yRowQuad; i++)
+							t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+					}
+				for (int i = 0; i < yRowQuad; i++)
+					Y[c][a + i] = t[i];
+				free(t);
+			}
+
+	//마지막 1줄 - both row / col
+
 								
 	//---------------2D Convolution---------------//
 
 	chrono::system_clock::time_point EndTime = chrono::system_clock::now();
-	chrono::microseconds micro = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
+	chrono::microseconds microTest = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
 	cout << "partition done" << endl;
-	cout << "Time : " << micro.count() << endl;
+	cout << "Time : " << microTest.count() << endl;
 
 	//////////////////////////////////////////////////
 	////---------------2D Convolution---------------//
-	//cout << "Start Full" << endl;
-	////cout << "[ " << X.size() << " x " << X[0].size() << " ] * [ " << K.size() << " x " << K[0].size()  << " ] = [ "
-	////	<< Y.size() << " x " << Y[0].size() << " ]" << endl;
-	//chrono::system_clock::time_point StartTime = chrono::system_clock::now();
-	////FULL Y
-	//for (int a = 0; a< yRowSize; a++)    // X 가로 길이 - K 가로 길이 + 1
-	//	for (int c = 0; c < yColSize; c++)     // X 세로 길이 - K 세로 길이 + 1
-	//		for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
-	//			for (int d = 0; d< K.size(); d++)			  // K 세로 길이
-	//				Y[c][a] += X[c + d][a + b] * K[d][b];
-	//chrono::system_clock::time_point EndTime = chrono::system_clock::now();
-	//chrono::microseconds micro = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
-	//cout << "full done" << endl;
-	//cout << "Time : " << micro.count() << endl;
+	cout << "Start Full" << endl;
+	//cout << "[ " << X.size() << " x " << X[0].size() << " ] * [ " << K.size() << " x " << K[0].size()  << " ] = [ "
+	//	<< Y.size() << " x " << Y[0].size() << " ]" << endl;
+	StartTime = chrono::system_clock::now();
+	//FULL Y
+	for (int a = 0; a< yRowSize; a++)    // X 가로 길이 - K 가로 길이 + 1
+		for (int c = 0; c < yColSize; c++)     // X 세로 길이 - K 세로 길이 + 1
+			for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
+				for (int d = 0; d< K.size(); d++)			  // K 세로 길이
+					Y[c][a] += X[c + d][a + b] * K[d][b];
+	EndTime = chrono::system_clock::now();
+	chrono::microseconds microBase = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
+	cout << "full done" << endl;
+	cout << "Time : " << microBase.count() << endl;
+	cout << "Result: " << microBase.count() / microTest.count() << " times faster" << endl;
 	////---------------2D Convolution---------------//
 	//////////////////////////////////////////////////
 	write_matrix(Y, "Y.txt");
