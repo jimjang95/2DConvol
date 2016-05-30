@@ -4,6 +4,7 @@
 #include <ctime>
 #include <vector>
 #include <chrono>
+#include <omp.h>
 
 #include "utility.h"
 
@@ -25,8 +26,8 @@ int main()
 	Matrix K;
 
 	// generate random data for test, comment below two lines to use your own input data.
-	//generate_data(200, 200, "X.txt");
-	//generate_data(40, 40, "K.txt");
+	generate_data(200, 200, "X.txt");
+	generate_data(40, 40, "K.txt");
 	
 	//------- you don't need to change here ----------//
 	// read input matrices from the file
@@ -56,6 +57,8 @@ int main()
 	//---------------2D Convolution---------------//
 		
 	// change this
+	omp_set_num_threads(4);
+#pragma omp parallel for
 	for (int a = 0; a< X[0].size() - K[0].size() + 1; a++)    // X 가로 길이 - K 가로 길이 + 1
 		for (int c = 0; c < X.size() - K.size() + 1; c++)     // X 세로 길이 - K 세로 길이 + 1
 			for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
