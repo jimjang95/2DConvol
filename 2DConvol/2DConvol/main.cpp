@@ -25,8 +25,8 @@ int main()
 	Matrix K;
 
 	// generate random data for test, comment below two lines to use your own input data.
-	generate_data(200, 200, "X.txt");
-	generate_data(40, 40, "K.txt");
+	//generate_data(200, 200, "X.txt");
+	//generate_data(40, 40, "K.txt");
 	
 	//------- you don't need to change here ----------//
 	// read input matrices from the file
@@ -49,24 +49,24 @@ int main()
 	//-----------------------------------------------//
 
 	cout << "Start 2D-Convolution" << endl;
-	cout << "[ " << X.size() << " x " << X[0].size() << " ] * [ " << K.size() << " x " << K[0].size()  << " ] = [ "
-		<< Y.size() << " x " << Y[0].size() << " ]" << endl;
+	//cout << "[ " << X.size() << " x " << X[0].size() << " ] * [ " << K.size() << " x " << K[0].size()  << " ] = [ "
+	//	<< Y.size() << " x " << Y[0].size() << " ]" << endl;
 	chrono::system_clock::time_point StartTime = chrono::system_clock::now();
 		
 	//---------------2D Convolution---------------//
 		
 	// change this
-	for (int a = 0; a< X[0].size() - K[0].size() + 1; a++)
-		for (int b = 0; b< K[0].size(); b++)
-			for (int c = 0; c < X.size() - K.size() + 1; c++)
-				for (int d = 0; d< K.size(); d++)											
-							Y[c][a] += X[c+d][a+b] * K[d][b];
+	for (int a = 0; a< X[0].size() - K[0].size() + 1; a++)    // X 가로 길이 - K 가로 길이 + 1
+		for (int c = 0; c < X.size() - K.size() + 1; c++)     // X 세로 길이 - K 세로 길이 + 1
+			for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
+				for (int d = 0; d< K.size(); d++)			  // K 세로 길이
+					Y[c][a] += X[c+d][a+b] * K[d][b];
 								
 	//---------------2D Convolution---------------//
 
 	chrono::system_clock::time_point EndTime = chrono::system_clock::now();
 	chrono::microseconds micro = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
-	cout << "2D-Convolution done" << endl;
+	cout << "abcd done" << endl;
 	cout << "Time : " << micro.count() << endl;
 
 	write_matrix(Y, "Y.txt");
