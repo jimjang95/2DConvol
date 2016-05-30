@@ -25,7 +25,7 @@ int main()
 	Matrix K;
 
 	// generate random data for test, comment below two lines to use your own input data.
-	generate_data(200, 200, "X.txt");
+	generate_data(199, 199, "X.txt");
 	generate_data(40, 40, "K.txt");
 	
 	//------- you don't need to change here ----------//
