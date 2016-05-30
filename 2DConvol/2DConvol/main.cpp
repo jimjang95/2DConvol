@@ -49,7 +49,7 @@ int main()
 	//
 	//-----------------------------------------------//
 
-	cout << "Start 2D-Convolution" << endl;
+	cout << "Start Partition" << endl;
 	//cout << "[ " << X.size() << " x " << X[0].size() << " ] * [ " << K.size() << " x " << K[0].size()  << " ] = [ "
 	//	<< Y.size() << " x " << Y[0].size() << " ]" << endl;
 	chrono::system_clock::time_point StartTime = chrono::system_clock::now();
@@ -57,21 +57,68 @@ int main()
 	//---------------2D Convolution---------------//
 		
 	// change this
-	omp_set_num_threads(4);
-#pragma omp parallel for
-	for (int a = 0; a< X[0].size() - K[0].size() + 1; a++)    // X 가로 길이 - K 가로 길이 + 1
-		for (int c = 0; c < X.size() - K.size() + 1; c++)     // X 세로 길이 - K 세로 길이 + 1
-			for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
-				for (int d = 0; d< K.size(); d++)			  // K 세로 길이
-					Y[c][a] += X[c+d][a+b] * K[d][b];
+//	omp_set_num_threads(4);
+//#pragma omp parallel for
+
+	int yRowSize = X[0].size() - K[0].size() + 1;
+	int yRowHalf = yRowSize >> 1;
+	int yColSize = X.size() - K.size() + 1;
+	int yColHalf = yColSize >> 1;
+
+	// Partitioning Y
+	// partition #01 - 2사분면 (0 ~ 1/2, 0 ~ 1/2)
+	for (int a = 0; a < yRowHalf; a++)
+		for (int c = 0; c < yColHalf; c++)
+			for (int b = 0; b < K[0].size(); b++)
+				for (int d = 0; d < K.size(); d++)
+					Y[c][a] += X[c + d][a + b] * K[d][b];
+
+	//partition #02 - 1사분면 (1/2 ~ 1, 0 ~ 1/2)
+	for (int a = yRowHalf; a < yRowSize; a++)
+		for (int c = 0; c < yColHalf; c++)
+			for (int b = 0; b < K[0].size(); b++)
+				for (int d = 0; d < K.size(); d++)
+					Y[c][a] += X[c + d][a + b] * K[d][b];
+
+	//partition #03 - 3사분면 (0 ~ 1/2, 1/2 ~ 1)
+	for (int a = 0; a < yRowHalf; a++)
+		for (int c = yColHalf; c < yColSize; c++)
+			for (int b = 0; b < K[0].size(); b++)
+				for (int d = 0; d < K.size(); d++)
+					Y[c][a] += X[c + d][a + b] * K[d][b];
+
+	//partition #04 - 4사분면 (1/2 ~ 1, 1/2 ~ 1)
+	for (int a = yRowHalf; a < yRowSize; a++)
+		for (int c = yColHalf; c < yColSize; c++)
+			for (int b = 0; b < K[0].size(); b++)
+				for (int d = 0; d < K.size(); d++)
+					Y[c][a] += X[c + d][a + b] * K[d][b];
 								
 	//---------------2D Convolution---------------//
 
 	chrono::system_clock::time_point EndTime = chrono::system_clock::now();
 	chrono::microseconds micro = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
-	cout << "abcd done" << endl;
+	cout << "partition done" << endl;
 	cout << "Time : " << micro.count() << endl;
 
+	//////////////////////////////////////////////////
+	////---------------2D Convolution---------------//
+	//cout << "Start Full" << endl;
+	////cout << "[ " << X.size() << " x " << X[0].size() << " ] * [ " << K.size() << " x " << K[0].size()  << " ] = [ "
+	////	<< Y.size() << " x " << Y[0].size() << " ]" << endl;
+	//chrono::system_clock::time_point StartTime = chrono::system_clock::now();
+	////FULL Y
+	//for (int a = 0; a< yRowSize; a++)    // X 가로 길이 - K 가로 길이 + 1
+	//	for (int c = 0; c < yColSize; c++)     // X 세로 길이 - K 세로 길이 + 1
+	//		for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
+	//			for (int d = 0; d< K.size(); d++)			  // K 세로 길이
+	//				Y[c][a] += X[c + d][a + b] * K[d][b];
+	//chrono::system_clock::time_point EndTime = chrono::system_clock::now();
+	//chrono::microseconds micro = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
+	//cout << "full done" << endl;
+	//cout << "Time : " << micro.count() << endl;
+	////---------------2D Convolution---------------//
+	//////////////////////////////////////////////////
 	write_matrix(Y, "Y.txt");
 
 	return 0;	
