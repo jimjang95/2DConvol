@@ -62,37 +62,90 @@ int main()
 
 	int yRowSize = X[0].size() - K[0].size() + 1;
 	int yRowHalf = yRowSize >> 1;
+	int yRowQuad = yRowHalf >> 1;
 	int yColSize = X.size() - K.size() + 1;
 	int yColHalf = yColSize >> 1;
+	int yColQuad = yColHalf >> 1;
 
+
+	//---------------2D Convolution---------------//
+	float* Xvec = new float[X.size() * X.size()];
+	float* Kvec = new float[K.size() * K.size()];
+	for (int i = 0; i < X.size(); i++) {
+		for (int j = 0; j < X.size(); j++)
+			Xvec[X.size() * i + j] = X[i][j];
+	}
+
+	for (int k = 0; k < K.size(); k++) {
+		for (int l = 0; l < K.size(); l++)
+			Kvec[K.size() * k + l] = K[k][l];
+	}
+
+	// change this
 	// Partitioning Y
 	// partition #01 - 2사분면 (0 ~ 1/2, 0 ~ 1/2)
-	for (int a = 0; a < yRowHalf; a++)
-		for (int c = 0; c < yColHalf; c++)
+		for (int c = 0; c < yColHalf; c++) 
+			for (int a = 0; a < yRowHalf; a += yRowQuad) {
+			vector<float> t;
+			float tmp;
+			t.resize(yRowQuad);
 			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++)
-					Y[c][a] += X[c + d][a + b] * K[d][b];
+				for (int d = 0; d < K.size(); d++) {
+					tmp = Kvec[K.size() * d + b];
+					for (int i = 0; i < t.size(); i++)
+						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+				}
+			for (int i = 0; i < t.size(); i++)
+				Y[c][a + i] = t[i];
+		}
 
 	//partition #02 - 1사분면 (1/2 ~ 1, 0 ~ 1/2)
-	for (int a = yRowHalf; a < yRowSize; a++)
-		for (int c = 0; c < yColHalf; c++)
+		for (int c = 0; c < yColHalf; c++) 
+			for (int a = yRowHalf; a < yRowSize - 1; a += yRowQuad) {
+			vector<float> t;
+			float tmp;
+			t.resize(yRowQuad);
 			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++)
-					Y[c][a] += X[c + d][a + b] * K[d][b];
+				for (int d = 0; d < K.size(); d++) {
+					tmp = Kvec[K.size() * d + b];
+					for (int i = 0; i < t.size(); i++)
+						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+				}
+			for (int i = 0; i < t.size(); i++)
+				Y[c][a + i] = t[i];
+		}
 
 	//partition #03 - 3사분면 (0 ~ 1/2, 1/2 ~ 1)
-	for (int a = 0; a < yRowHalf; a++)
-		for (int c = yColHalf; c < yColSize; c++)
+		for (int c = yColHalf; c < yColSize - 1; c++)
+			for (int a = 0; a < yRowHalf; a += yRowQuad) {
+			vector<float> t;
+			float tmp;
+			t.resize(yRowQuad);
 			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++)
-					Y[c][a] += X[c + d][a + b] * K[d][b];
+				for (int d = 0; d < K.size(); d++) {
+					tmp = Kvec[K.size() * d + b];
+					for (int i = 0; i < t.size(); i++)
+						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+				}
+			for (int i = 0; i < t.size(); i++)
+				Y[c][a + i] = t[i];
+		}
 
 	//partition #04 - 4사분면 (1/2 ~ 1, 1/2 ~ 1)
-	for (int a = yRowHalf; a < yRowSize; a++)
-		for (int c = yColHalf; c < yColSize; c++)
+		for (int c = yColHalf; c < yColSize - 1; c++)
+			for (int a = yRowHalf; a < yRowSize - 1; a+= yRowQuad) {
+			vector<float> t;
+			float tmp;
+			t.resize(yRowQuad);
 			for (int b = 0; b < K[0].size(); b++)
-				for (int d = 0; d < K.size(); d++)
-					Y[c][a] += X[c + d][a + b] * K[d][b];
+				for (int d = 0; d < K.size(); d++) {
+					tmp = Kvec[K.size() * d + b];
+					for (int i = 0; i < t.size(); i++)
+						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+				}
+			for (int i = 0; i < t.size(); i++)
+				Y[c][a + i] = t[i];
+		}
 								
 	//---------------2D Convolution---------------//
 
