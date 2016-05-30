@@ -54,13 +54,26 @@ int main()
 	chrono::system_clock::time_point StartTime = chrono::system_clock::now();
 		
 	//---------------2D Convolution---------------//
+	float* Xvec = new float[X.size() * X.size()];
+	float* Kvec = new float[K.size() * K.size()];
 		
 	// change this
-	for (int a = 0; a< X[0].size() - K[0].size() + 1; a++)
-		for (int b = 0; b< K[0].size(); b++)
-			for (int c = 0; c < X.size() - K.size() + 1; c++)
-				for (int d = 0; d< K.size(); d++)											
-							Y[c][a] += X[c+d][a+b] * K[d][b];
+	for (int c = 0; c < X.size() - K.size() + 1; c = c + 1)
+		for (int a = 0; a < X[0].size() - K[0].size() + 1; a = a + 16)
+		{
+			float tmp;
+			float* t = new float[16];
+			for (int i = 0; i < 16; i++)
+				t[i] = 0;
+			for (int b = 0; b < K[0].size(); b++)
+				for (int d = 0; d < K.size(); d++) {
+					tmp = Kvec[K.size() * d + b];
+					for (int i = 0; i < 16; i++)
+						t[i] += Xvec[X.size() * (c + d) + (a + i + b)] * tmp;
+				}
+			for (int i = 0; i < 16; i++)
+				Y[c][a + i] = t[i];
+		}
 								
 	//---------------2D Convolution---------------//
 
