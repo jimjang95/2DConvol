@@ -56,6 +56,16 @@ int main()
 	//---------------2D Convolution---------------//
 	float* Xvec = new float[X.size() * X.size()];
 	float* Kvec = new float[K.size() * K.size()];
+	for (int i = 0; i < X.size(); i++) {
+		for (int j = 0; j < X.size(); j++)
+			Xvec[X.size() * i + j] = X[i][j];
+	}
+
+	for (int k = 0; k < K.size(); k++) {
+		for (int l = 0; l < K.size(); l++)
+			Kvec[K.size() * k + l] = K[k][l];
+	}
+
 		
 	// change this
 	for (int c = 0; c < X.size() - K.size() + 1; c = c + 1)
