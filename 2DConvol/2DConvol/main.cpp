@@ -57,8 +57,7 @@ int main()
 	//---------------2D Convolution---------------//
 		
 	// change this
-//	omp_set_num_threads(4);
-//#pragma omp parallel for
+	omp_set_num_threads(4);
 
 	int fSize = sizeof(float);
 	int yRowSize = X[0].size() - K[0].size() + 1;
@@ -85,6 +84,7 @@ int main()
 	// change this
 	// Partitioning Y
 	// partition #01 - 2사분면 (0 ~ 1/2, 0 ~ 1/2)
+#pragma omp parallel for
 		for (int c = 0; c < yColHalf; c++) 
 			for (int a = 0; a < yRowHalf; a += yRowQuad) {
 				float* t = (float*) malloc(yRowQuad * fSize);
@@ -101,6 +101,7 @@ int main()
 			}
 
 	//partition #02 - 1사분면 (1/2 ~ 1, 0 ~ 1/2)
+#pragma omp parallel for
 		for (int c = 0; c < yColHalf; c++) 
 			for (int a = yRowHalf; a < yRowSize - 1; a += yRowQuad) {
 				float* t = (float*) malloc(yRowQuad * fSize);
@@ -117,6 +118,7 @@ int main()
 			}
 
 	//partition #03 - 3사분면 (0 ~ 1/2, 1/2 ~ 1)
+#pragma omp parallel for
 		for (int c = yColHalf; c < yColSize - 1; c++)
 			for (int a = 0; a < yRowHalf; a += yRowQuad) {
 				float* t = (float*) malloc(yRowQuad * fSize);
@@ -133,6 +135,7 @@ int main()
 			}
 
 	//partition #04 - 4사분면 (1/2 ~ 1, 1/2 ~ 1)
+#pragma omp parallel for
 		for (int c = yColHalf; c < yColSize - 1; c++)
 			for (int a = yRowHalf; a < yRowSize - 1; a+= yRowQuad) {
 				float* t = (float*) malloc(yRowQuad * fSize);
@@ -165,6 +168,7 @@ int main()
 	//	<< Y.size() << " x " << Y[0].size() << " ]" << endl;
 	StartTime = chrono::system_clock::now();
 	//FULL Y
+//#pragma omp parallel for
 	for (int a = 0; a< yRowSize; a++)    // X 가로 길이 - K 가로 길이 + 1
 		for (int c = 0; c < yColSize; c++)     // X 세로 길이 - K 세로 길이 + 1
 			for (int b = 0; b< K[0].size(); b++)              // K 가로 길이
@@ -174,7 +178,7 @@ int main()
 	chrono::microseconds microBase = chrono::duration_cast<chrono::microseconds>(EndTime - StartTime);
 	cout << "full done" << endl;
 	cout << "Time : " << microBase.count() << endl;
-	cout << "Result: " << microBase.count() / microTest.count() << " times faster" << endl;
+	cout << "Result: " << (float) microBase.count() / (float) microTest.count() << " times faster" << endl;
 	////---------------2D Convolution---------------//
 	//////////////////////////////////////////////////
 	write_matrix(Y, "Y.txt");
